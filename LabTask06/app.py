@@ -80,6 +80,9 @@ DBSCAN_MAX = 30
 DBSCAN_START = 10
 DBSCAN_STEP = 1
 
+## Add exploratory feature to find optimal eps?
+#TODO
+
 # Pass function
 if alg == "KMeans":
     k = st.sidebar.slider("clusters", KMEANS_MIN, KMEANS_MAX, KMEANS_START, KMEANS_STEP)
