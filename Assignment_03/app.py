@@ -48,9 +48,9 @@ def build_composition_matrix(df: pd.DataFrame, min_businesses: int):
 # the same cluster id across both the PCA scatter and the map.
 CLUSTER_PALETTE = [
     "#2a78d6",  # blue
-    "#eb6834",  # orange
-    "#1baf7a",  # aqua
-    "#eda100",  # yellow
+    "#ffb300",  # orange
+    "#27e7a4",  # aqua
+    "#f4ff20",  # yellow
     "#e87ba4",  # magenta
     "#008300",  # green
     "#4a3aa7",  # violet
