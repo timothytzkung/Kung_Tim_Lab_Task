@@ -1,6 +1,5 @@
 import json
 
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -35,7 +34,28 @@ def build_composition_matrix(df: pd.DataFrame, min_businesses: int):
 
     composition = pd.crosstab(filtered["localarea"], filtered["businesstype"], normalize="index") * 100
     composition = composition.loc[counts_per_area[kept_areas].sort_values(ascending=False).index]
-    return composition, counts_per_area
+
+    centroids = (
+        filtered.groupby("localarea")[["geo_point_2d.lat", "geo_point_2d.lon"]]
+        .mean()
+        .rename(columns={"geo_point_2d.lat": "lat", "geo_point_2d.lon": "lon"})
+        .loc[composition.index]
+    )
+    return composition, counts_per_area, centroids
+
+
+# Fixed categorical order (colorblind-safe, validated) — same hue always means
+# the same cluster id across both the PCA scatter and the map.
+CLUSTER_PALETTE = [
+    "#2a78d6",  # blue
+    "#eb6834",  # orange
+    "#1baf7a",  # aqua
+    "#eda100",  # yellow
+    "#e87ba4",  # magenta
+    "#008300",  # green
+    "#4a3aa7",  # violet
+    "#e34948",  # red
+]
 
 
 st.title("Vancouver Business Area Explorer")
@@ -60,7 +80,7 @@ min_businesses = st.sidebar.slider(
     help="Areas with fewer total licences than this are excluded before building the composition matrix.",
 )
 
-composition, counts_per_area = build_composition_matrix(df, min_businesses)
+composition, counts_per_area, centroids = build_composition_matrix(df, min_businesses)
 n_dropped = (counts_per_area < min_businesses).sum()
 dropped_names = counts_per_area[counts_per_area < min_businesses].index.tolist()
 
@@ -98,8 +118,8 @@ st.dataframe(
 st.divider()
 
 st.sidebar.subheader("2. Number of clusters (K)")
-max_k = max(2, composition.shape[0] - 1)
-k = st.sidebar.slider("K (clusters)", min_value=2, max_value=min(10, max_k), value=4, step=1)
+max_k = min(len(CLUSTER_PALETTE), composition.shape[0] - 1)
+k = st.sidebar.slider("K (clusters)", min_value=2, max_value=max(2, max_k), value=4, step=1)
 
 kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
 cluster_labels = kmeans.fit_predict(composition.values)
@@ -107,13 +127,18 @@ cluster_labels = kmeans.fit_predict(composition.values)
 pca = PCA(n_components=2, random_state=42)
 coords = pca.fit_transform(composition.values)
 
+cluster_str = cluster_labels.astype(str)
+color_map = {str(i): CLUSTER_PALETTE[i] for i in range(k)}
+
 plot_df = pd.DataFrame(
     {
         "localarea": composition.index,
         "PC1": coords[:, 0],
         "PC2": coords[:, 1],
-        "cluster": cluster_labels.astype(str),
+        "cluster": cluster_str,
         "n_businesses": counts_per_area.loc[composition.index].values,
+        "lat": centroids.loc[composition.index, "lat"].values,
+        "lon": centroids.loc[composition.index, "lon"].values,
     }
 )
 
@@ -123,6 +148,8 @@ fig = px.scatter(
     x="PC1",
     y="PC2",
     color="cluster",
+    color_discrete_map=color_map,
+    category_orders={"cluster": [str(i) for i in range(k)]},
     size="n_businesses",
     text="localarea",
     hover_data={"localarea": True, "n_businesses": True, "PC1": ":.2f", "PC2": ":.2f", "cluster": True},
@@ -139,3 +166,52 @@ st.caption(
     f"PCA components together explain {pca.explained_variance_ratio_.sum():.1%} of variance "
     f"in the {composition.shape[1]}-dimensional composition matrix."
 )
+
+st.divider()
+
+st.subheader(f"Geographic view: area centroids colored by cluster (K={k})")
+map_fig = px.scatter_map(
+    plot_df,
+    lat="lat",
+    lon="lon",
+    color="cluster",
+    color_discrete_map=color_map,
+    category_orders={"cluster": [str(i) for i in range(k)]},
+    size="n_businesses",
+    hover_name="localarea",
+    hover_data={"n_businesses": True, "cluster": True, "lat": False, "lon": False},
+    zoom=10.5,
+    map_style="open-street-map",
+)
+map_fig.update_layout(legend_title_text="Cluster", margin=dict(l=0, r=0, t=0, b=0))
+st.plotly_chart(map_fig, use_container_width=True)
+st.caption("Each point is an area's business centroid (mean lat/lon of its licences); size = business count.")
+
+st.divider()
+
+st.subheader(f"Cluster membership (K={k})")
+st.caption(
+    "Areas grouped by cluster, plus each cluster's top business types by average share — "
+    "use this evidence to write your own interpretation of whether the grouping makes sense."
+)
+
+membership = plot_df[["localarea", "cluster", "n_businesses"]].copy()
+for cid in range(k):
+    members = membership[membership["cluster"] == str(cid)].sort_values("n_businesses", ascending=False)
+    top_types = composition.loc[members["localarea"]].mean(axis=0).sort_values(ascending=False).head(5)
+
+    st.markdown(f"**Cluster {cid}** &nbsp; ({len(members)} area{'s' if len(members) != 1 else ''})")
+    col1, col2 = st.columns([2, 3])
+    with col1:
+        st.dataframe(
+            members.rename(columns={"localarea": "Area", "n_businesses": "# Businesses"})[
+                ["Area", "# Businesses"]
+            ],
+            hide_index=True,
+            use_container_width=True,
+        )
+    with col2:
+        st.dataframe(
+            top_types.rename("Avg. % of area's businesses").round(2),
+            use_container_width=True,
+        )
