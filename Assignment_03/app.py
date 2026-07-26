@@ -119,7 +119,7 @@ st.divider()
 
 st.sidebar.subheader("2. Number of clusters (K)")
 max_k = min(len(CLUSTER_PALETTE), composition.shape[0] - 1)
-k = st.sidebar.slider("K (clusters)", min_value=2, max_value=max(2, max_k), value=4, step=1)
+k = st.sidebar.slider("K (clusters)", min_value=2, max_value=max(2, max_k), value=6, step=1)
 
 kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
 cluster_labels = kmeans.fit_predict(composition.values)
@@ -191,8 +191,7 @@ st.divider()
 
 st.subheader(f"Cluster membership (K={k})")
 st.caption(
-    "Areas grouped by cluster, plus each cluster's top business types by average share — "
-    "use this evidence to write your own interpretation of whether the grouping makes sense."
+    "Areas grouped by cluster, plus each cluster's top business types by average share."
 )
 
 membership = plot_df[["localarea", "cluster", "n_businesses"]].copy()
@@ -215,3 +214,13 @@ for cid in range(k):
             top_types.rename("Avg. % of area's businesses").round(2),
             use_container_width=True,
         )
+    
+st.markdown("""
+            ## B4 - Write Up
+Regarding meaningful groupings, I observe that Cluster 5 (singleton containing Downtown) is rather accurate. Downtown is Vancouver's core financial/legal district, so a profile topped by legal, business-support, and consulting services standing apart from every residential neighbourhood makes sense to me. In the same way, Cluster 0's wholesale/non-food signature fits the local areas well. Mount Pleasant, Grandview-Woodland, and Strathcona are old warehouse and light-industrial eastside areas that are now mixed with some rental apartments, and Marpole has its own industrial strip along the Fraser. Cluster 4 contains Sunset and Hastings-Sunrise, which are similar working-class East Van neighbourhoods with comparable commercial strips. Cluster 2's sky-high long-term rental share fits Kitsilano and the West End very well. The West End is generally Vancouver's more densely populated area, with large rental apartment blocks
+
+What is surprising to me, however, is that Shaughnessy is landing in the more rental-heavy Cluster 2. Shaughnessy is known to be one of the more affluent/wealthy areas with lots of heritage mansions and large properties, which is very far from an apartment-rental market. I argue this may be due to a small-sample artifact. I observe that Shaughnessy has only 355 registered businesses (the smallest of any area in the dataset), so a handful of rental-related or property-management listings can potentially swing its percentage profile enough to statistically resemble West-End/Kits, even though the underlying neighbourhood is very different. I also found Fairview anchoring the more "health-care" cluster of cluster 3 to be an interesting observation. Broadway in Fairview is a major employment hub (as demonstrated with their 10k+ registered businesses in the dataset, second only to Downtown), but it's also a hub that's built around health care facilities such as Vancouver General Hospital, BC Cancer Agency, and the BC Centre for Disease Control. As such, the fellow areas in cluster 3 (Renfrew, Victoria-Fraserview, Killarney, Dunbar, and Oakridge) don't have a comparable health care corridor. I argue that they likely land in the same cluster because they're residential areas with limited business diversity, where healthcare clinics and offices make up an outsized share of what commercial activity exists.
+
+Ultimately, because clustering here in done on relative composition rather than absolute counts, small-business-count neighbourhoods (such as Shaughnessy and South Cambie) are just as influential as huge ones (Fairview and Downtown). I observe this is what lets a mansion district like Shaunessy get grouped with West Can's densest rental zones, and a hospital district gets grouped with more quiet family suburbs (Renfrew, Killarney, etc.). 
+
+""")
