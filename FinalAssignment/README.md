@@ -1,23 +1,23 @@
 # BC Hydro EV Charging & Grid Load Optimization
 
-IAT461 final lab assignment. Data Scientist: Tim Kung. Client: Phumnawat (Poom) Phosawatmanee.
+IAT461 final assignment. Data Scientist: Tim Kung. Client: Phumnawat (Poom) Phosawatmanee.
 
 ## Project background
 
 BC Hydro is seeing evening demand spikes in Metro Vancouver as EV owners plug in
-after work, straining neighborhood transformers. Management is weighing three
+after work, straining neighbourhood transformers. Management is weighing three
 options:
 
 - **Option A** — a province-wide mandatory peak tariff penalty (4–9 PM) on all
   home power use.
-- **Option B** — a capital project to replace/upgrade neighborhood transformers
+- **Option B** — a capital project to replace/upgrade neighbourhood transformers
   across Metro Vancouver.
 - **Option C** — cluster EV drivers into charging-habit archetypes and build
   targeted off-peak incentives.
 
 The assignment evaluates Options A/B/C in EDA, then (assuming Option C is
 selected) runs an unsupervised clustering workflow on EV charging session data
-to discover behavioral archetypes, which get translated into a rebate/incentive
+to discover behavioural archetypes, which get translated into a rebate/incentive
 program for BC Hydro's Demand Side Management team.
 
 Full brief, clarifying Q&A, and the agreed 3-week milestone plan are in
@@ -45,7 +45,7 @@ Full brief, clarifying Q&A, and the agreed 3-week milestone plan are in
 - **[reports/week-1-report.pdf](reports/week-1-report.pdf)** — Week 1 milestone
   deliverable (EDA & first clustering pass).
 - **[CONTEXT.md](CONTEXT.md)** — client proposal and lab agreement document:
-  entity overview, business context, required tasks, stakeholder, clarifying
+  entity overview, business context, required tasks, stakeholders, clarifying
   Q&A with the client, and the agreed 3-week milestone plan.
 
 ## Milestones
@@ -57,3 +57,7 @@ Per the lab agreement in CONTEXT.md:
    cluster archetypes)
 3. **Week 3** — final version (clean notebook, written summary, optional video
    walkthrough)
+
+## Links
+
+Youtube Presentation: [https://youtu.be/5Ai2MdOo2DA](https://youtu.be/5Ai2MdOo2DA)
